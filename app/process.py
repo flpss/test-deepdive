@@ -1,6 +1,8 @@
 from fastapi import HTTPException
 import speech_recognition as sr
 from googletrans import Translator
+from gtts import gTTS
+from uuid import uuid4
 
 def convert_wav_to_text(file, language):
     # Initialize recognizer class (for recognizing the speech)
@@ -33,3 +35,17 @@ def translate_text(text, target_language):
     
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Translation error: {e}")
+
+def text_to_audio(text, language, tld=None):
+    try:
+        output_file = f"files/{uuid4()}.mp3"
+        # Create a gTTS object
+        tts = gTTS(text=text, lang=language, tld=tld)
+
+        # Save the generated audio file
+        tts.save(output_file)
+
+        return output_file
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error converting text to audio: {e}")
