@@ -40,7 +40,10 @@ def text_to_audio(text, language, tld=None):
     try:
         output_file = f"files/{uuid4()}.mp3"
         # Create a gTTS object
-        tts = gTTS(text=text, lang=language, tld=tld)
+        if tld is None:
+            tts = gTTS(text=text, lang=language)
+        else:
+            tts = gTTS(text=text, lang=language, tld=tld)
 
         # Save the generated audio file
         tts.save(output_file)

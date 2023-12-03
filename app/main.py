@@ -6,9 +6,12 @@ from pydub import AudioSegment
 from io import BytesIO
 from uuid import uuid4
 import process
+from fastapi.staticfiles import StaticFiles
+
+BASE_URL = "http://localhost:8000/"
 
 app = FastAPI(title="Deepdive Test")
-
+app.mount("/files", StaticFiles(directory="files"), name="files")
 
 @app.get("/")
 def read_root():
@@ -23,8 +26,9 @@ def mp3_to_wav(mp3_bytes):
 @app.post("/upload/")
 async def upload_file(
     file: UploadFile = File(...),
-    languageIn: str = Query(..., title="Language", description="Language of the input file", regex="^[a-z]{2}-[A-Z]{2}$"),
-    languageOut: str = Query(..., title="Language", description="Language of the output file", regex="^[a-z]{2}-[A-Z]{2}$")
+    languageIn: str = Query(..., title="Language", description="Language of the input file"),
+    languageOut: str = Query(..., title="Language", description="Language of the output file"),
+    tld: str = Query(None, title="TLD", default=None, description="Top-level domain of the output file")
 ):
     # Generate a random file name
     file_name = f"files/{uuid4()}.wav"
@@ -50,4 +54,5 @@ async def upload_file(
     text = process.convert_wav_to_text(file_name, languageIn)
     translate_language = languageOut[:2] if languageOut[:2] != "zh" else languageOut
     translated_text = process.translate_text(text, translate_language)
-    return {"text": translated_text}
+    audio_file = process.text_to_audio(translated_text, languageOut, tld=tld)
+    return {"audio_file": BASE_URL + audio_file}
