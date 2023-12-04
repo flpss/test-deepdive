@@ -10,3 +10,9 @@ services:
       - .:/app
     ports:
       - 8000:8000
+  front:
+    build: ./front
+    ports:
+      - 3000:4200
+    depends_on:
+      - web
