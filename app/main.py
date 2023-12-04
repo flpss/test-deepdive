@@ -1,16 +1,26 @@
 import sys
 sys.path.insert(0, './app')
-from fastapi import FastAPI, File, UploadFile, Query, HTTPException
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.responses import StreamingResponse
 from pydub import AudioSegment
 from io import BytesIO
 from uuid import uuid4
 import process
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 BASE_URL = "http://localhost:8000/"
 
 app = FastAPI(title="Deepdive Test")
+
+origins = ["*", 'http://localhost:4200']
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
 app.mount("/files", StaticFiles(directory="files"), name="files")
 
 @app.get("/")
@@ -26,10 +36,12 @@ def mp3_to_wav(mp3_bytes):
 @app.post("/upload/")
 async def upload_file(
     file: UploadFile = File(...),
-    languageIn: str = Query(..., title="Language", description="Language of the input file"),
-    languageOut: str = Query(..., title="Language", description="Language of the output file"),
-    tld: str = Query(None, title="TLD", default=None, description="Top-level domain of the output file")
+    languageIn: str = Form(..., title="Language", description="Language of the input file"),
+    languageOut: str = Form(..., title="Language", description="Language of the output file"),
+    tld: str = Form(None, title="TLD", description="Top-level domain of the output file")
 ):
+    if tld == "null":
+        tld = None
     # Generate a random file name
     file_name = f"files/{uuid4()}.wav"
 
